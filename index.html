@@ -2,268 +2,453 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Grandmaster Analysis Hub - Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IRON FIST TOURNAMENT 2025</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@400;700;900&family=Noto+Sans+KR:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
-            --bg-body: #161512; --bg-panel: #262421;
-            --sq-light: #ebecd0; --sq-dark: #779556;
-            --hl-move: rgba(0, 0, 0, 0.15); --hl-select: rgba(235, 236, 104, 0.7);
-            --accent: #95bb4a; --board-size: min(85vh, 600px);
+            --bg-deep: #050505;
+            --neon-red: #ff003c;
+            --fire-orange: #ff5e00;
+            --gold: #ffd700;
+            --silver: #e0e0e0;
+            --bronze: #cd7f32;
+            --chzzk-green: #00ffa3;
+            --card-bg: rgba(20, 20, 20, 0.95);
+            --border-color: #333333;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background-color: var(--bg-body); color: #bababa; margin: 0;
-            display: flex; justify-content: center; align-items: center; height: 100vh;
-            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-deep);
+            color: #ffffff;
+            font-family: 'Orbitron', 'Noto Sans KR', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
         }
 
-        .app-container { display: flex; gap: 30px; align-items: flex-start; }
+        /* 불꽃 배경 레이어 */
+        .fire-master-container { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 120%, #4a0000 0%, #000000 70%); overflow: hidden; }
+        .fire-glow { position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%); width: 120%; height: 40%; background: radial-gradient(circle, rgba(255, 48, 0, 0.2) 0%, transparent 70%); filter: blur(50px); animation: flicker 4s infinite alternate ease-in-out; }
+        @keyframes flicker { 0% { opacity: 0.5; transform: translateX(-52%) scaleY(1); } 100% { opacity: 0.8; transform: translateX(-48%) scaleY(1.2); } }
+        .ember { position: absolute; background: var(--fire-orange); border-radius: 50%; filter: blur(1px); opacity: 0; pointer-events: none; animation: rise var(--duration) infinite linear; }
+        @keyframes rise { 0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; } 20% { opacity: 0.8; } 100% { transform: translateY(-100vh) translateX(var(--drift)) scale(0); opacity: 0; } }
 
-        .board-container { position: relative; box-shadow: 0 15px 50px rgba(0,0,0,0.8); }
-        .board {
-            width: var(--board-size); height: var(--board-size);
-            display: grid; grid-template-columns: repeat(8, 1fr);
-        }
+        .hidden { display: none !important; }
 
-        .square {
-            position: relative; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center; cursor: pointer;
+        header {
+            position: sticky; top: 0; height: 60px; background: rgba(0, 0, 0, 0.9); border-bottom: 2px solid var(--neon-red);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 1000; backdrop-filter: blur(10px);
         }
-        .square.light { background: var(--sq-light); }
-        .square.dark { background: var(--sq-dark); }
-        .square.selected { background: var(--hl-select) !important; }
+        .logo { font-family: 'Black Ops One'; font-size: 1.2rem; text-shadow: 0 0 10px var(--neon-red); cursor: pointer; }
+        .nav-group { display: flex; gap: 8px; }
+        .nav-btn {
+            background: #1a1a1a; color: #aaa; padding: 6px 12px; font-size: 0.7rem; border: 1px solid #333; cursor: pointer;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); transition: 0.3s;
+        }
+        .nav-btn:hover { color: #fff; border-color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 0, 60, 0.3); }
+
+        /* 메인 홈 */
+        #view-home { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 15px; overflow-y: auto; z-index: 1; }
+        .hero-title-container { position: relative; margin-bottom: 5px; }
+        .hero-title {
+            font-family: 'Black Ops One'; font-size: clamp(2.5rem, 10vw, 6rem); text-align: center;
+            background: linear-gradient(180deg, #fff 40%, #777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; position: relative; z-index: 2;
+        }
+        .hero-subtitle { font-size: 0.9rem; color: var(--neon-red); letter-spacing: 5px; font-weight: 900; margin-bottom: 50px; text-shadow: 0 0 10px rgba(255, 0, 60, 0.5); }
         
-        .move-hint::after {
-            content: ""; width: 26%; height: 26%; background: var(--hl-move); border-radius: 50%;
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 400px; margin-bottom: 40px; }
+        @media (min-width: 768px) { .menu-grid { grid-template-columns: repeat(3, 1fr); max-width: 900px; } }
+        .menu-card {
+            background: rgba(20, 20, 20, 0.8); border: 1px solid #333; border-bottom: 4px solid #444;
+            padding: 25px; text-align: center; cursor: pointer; transition: 0.3s; backdrop-filter: blur(5px);
         }
+        .menu-card:hover { transform: translateY(-5px); border-bottom-color: var(--neon-red); background: rgba(50, 0, 0, 0.6); }
+        .menu-card i { font-size: 2rem; margin-bottom: 15px; color: #888; }
+        .menu-card h3 { font-size: 1rem; color: #fff; }
 
-        .piece {
-            width: 100%; height: 100%; background-size: 90%;
-            background-repeat: no-repeat; background-position: center; z-index: 10;
+        /* 대진표 */
+        #view-bracket { flex: 1; width: 100vw; height: calc(100vh - 60px); overflow: hidden; background: transparent; }
+        .bracket-scroll-container { width: 100%; height: 100%; overflow: auto; -webkit-overflow-scrolling: touch; }
+        .bracket-ui { display: flex; padding: 60px 40px; min-width: 2400px; min-height: 100%; }
+        .round-col { display: flex; flex-direction: column; width: 220px; margin: 0 40px; justify-content: space-around; position: relative; }
+        .round-title {
+            text-align: center; font-family: 'Black Ops One'; font-size: 1.1rem; color: #fff; text-shadow: 0 0 8px var(--fire-orange);
+            background: rgba(255, 94, 0, 0.2); padding: 12px 5px; border-top: 2px solid var(--fire-orange); border-bottom: 2px solid var(--fire-orange); margin-bottom: 20px;
         }
+        .match-card {
+            background: var(--card-bg); border: 1px solid #333; border-left: 4px solid #555;
+            padding: 15px; margin: 15px 0; cursor: pointer; position: relative; clip-path: polygon(5% 0, 100% 0, 100% 80%, 95% 100%, 0 100%, 0 20%); transition: 0.2s; z-index: 2;
+        }
+        .match-card:hover { border-color: var(--neon-red); background: #1a1a1a; box-shadow: 0 0 15px rgba(255, 0, 60, 0.2); }
+        .player-line { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 5px 0; color: #aaa; }
+        .winner .p-name { color: var(--gold); font-weight: 900; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+        .winner .p-score { color: var(--neon-red); font-weight: 900; }
 
-        /* 프로모션 모달 */
-        .promotion-modal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 100; display: flex;
-            justify-content: center; align-items: center; backdrop-filter: blur(2px);
-        }
-        .promotion-modal.hidden { display: none; }
-        .promo-choices {
-            background: var(--bg-panel); padding: 15px; border-radius: 12px;
-            display: flex; gap: 15px; border: 2px solid var(--accent);
-        }
-        .promo-option {
-            width: 70px; height: 70px; background-size: contain;
-            background-repeat: no-repeat; background-position: center;
-            cursor: pointer; transition: transform 0.1s; border-radius: 8px;
-            background-color: rgba(255,255,255,0.05);
-        }
-        .promo-option:hover { transform: scale(1.1); background-color: var(--accent); }
+        /* 중계 화면 */
+        #view-stream { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #000; padding: 20px; position: relative; }
+        #stream-wrapper { width: 100%; max-width: 1200px; aspect-ratio: 16 / 9; position: relative; box-shadow: 0 0 50px rgba(0, 255, 163, 0.2); border: 1px solid rgba(0, 255, 163, 0.3); z-index: 10; }
+        #stream-container { width: 100%; height: 100%; }
+        .stream-ui-overlay { position: absolute; top: -50px; width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; z-index: 11; }
 
-        /* 사이드바 */
-        .sidebar {
-            width: 320px; background: var(--bg-panel); border-radius: 12px;
-            padding: 25px; display: flex; flex-direction: column; gap: 20px;
-            border: 1px solid #333;
-        }
-        .eval-section { border-bottom: 1px solid #333; padding-bottom: 20px; }
-        .eval-num { font-size: 2.4rem; font-weight: 800; color: #fff; }
-        .eval-bar { height: 8px; background: #444; border-radius: 4px; overflow: hidden; margin: 10px 0; }
-        #eval-fill { height: 100%; width: 50%; background: #fff; transition: 0.6s ease; }
-        .best-move { color: var(--accent); font-weight: 600; font-size: 1.1rem; }
-        .history { 
-            background: #1c1a17; height: 150px; padding: 12px; border-radius: 6px;
-            overflow-y: auto; font-family: monospace; font-size: 0.85rem; line-height: 1.6;
-        }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button {
-            background: #3c3934; color: #fff; border: none; padding: 12px;
-            border-radius: 6px; cursor: pointer; font-weight: bold;
-        }
-        button.primary { background: var(--accent); color: #161512; }
-        .status-msg { font-size: 0.8rem; letter-spacing: 1px; color: #888; text-transform: uppercase; }
+        /* 상품 화면 */
+        #view-prizes { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 40px 20px; overflow-y: auto; z-index: 1; }
+        .prize-box { width: 100%; max-width: 320px; background: rgba(10, 10, 10, 0.8); border: 1px solid #222; padding: 30px; text-align: center; opacity: 0; transform: translateY(20px); transition: 0.5s; backdrop-filter: blur(5px); }
+        .prize-box.show { opacity: 1; transform: translateY(0); }
+        .prize-box.gold { border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
+
+        /* 모달 */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-content { background: #111; width: 100%; max-width: 420px; padding: 30px; border: 2px solid var(--neon-red); text-align: center; }
+        .score-input { width: 70px; height: 70px; background: #000; border: 1px solid var(--neon-red); color: var(--neon-red); font-size: 2.5rem; text-align: center; font-family: 'Black Ops One'; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="board-container">
-        <div id="board" class="board"></div>
-        <div id="promotion-modal" class="promotion-modal hidden">
-            <div class="promo-choices" id="promo-choices"></div>
+    <div class="fire-master-container" id="ember-container">
+        <div class="fire-glow"></div>
+    </div>
+
+    <header>
+        <div class="logo" onclick="App.switchView('view-home')">IRON FIST <span>2025</span></div>
+        <div class="nav-group">
+            <button class="nav-btn" onclick="App.switchView('view-home')">HOME</button>
+            <button class="nav-btn" id="auth-btn" onclick="App.toggleAuth()">LOGIN</button>
+            <button class="nav-btn" onclick="App.resetData()" style="color:var(--neon-red)">RESET</button>
+        </div>
+    </header>
+
+    <main id="view-home">
+        <div class="hero-title-container">
+            <h1 class="hero-title">IRON FIST</h1>
+        </div>
+        <div class="hero-subtitle">FINAL TOURNAMENT</div>
+        
+        <div class="menu-grid">
+            <div class="menu-card" onclick="App.switchView('view-bracket')">
+                <i class="fas fa-sitemap"></i>
+                <h3>대진표 (BRACKET)</h3>
+            </div>
+            <div class="menu-card" onclick="App.switchView('view-stream')" style="border-bottom-color: var(--chzzk-green);">
+                <i class="fas fa-video" style="color:var(--chzzk-green)"></i>
+                <h3 style="color:var(--chzzk-green)">라이브 중계</h3>
+            </div>
+            <div class="menu-card" onclick="App.switchView('view-prizes')">
+                <i class="fas fa-trophy" style="color:var(--gold)"></i>
+                <h3>우승 상품</h3>
+            </div>
+        </div>
+    </main>
+
+    <main id="view-bracket" class="hidden">
+        <div class="bracket-scroll-container">
+            <div class="bracket-ui">
+                <div class="round-col" id="col-l1"></div>
+                <div class="round-col" id="col-l2"></div>
+                <div class="round-col" id="col-l3"></div>
+                <div class="round-col" id="col-l4"></div>
+                <div class="round-col" id="col-final" style="width: 300px;"></div>
+                <div class="round-col" id="col-r4"></div>
+                <div class="round-col" id="col-r3"></div>
+                <div class="round-col" id="col-r2"></div>
+                <div class="round-col" id="col-r1"></div>
+            </div>
+        </div>
+    </main>
+
+    <main id="view-stream" class="hidden">
+        <div class="stream-ui-overlay">
+            <span style="color:var(--chzzk-green); font-weight:bold; font-size:0.9rem; letter-spacing:1px; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:4px;">
+                <i class="fas fa-circle-play"></i> LIVE ARENA
+            </span>
+            <div style="display:flex; gap:10px;">
+                <button class="nav-btn" onclick="window.open('https://chzzk.naver.com/e8a6e6cc0882fce99e7edbb6ba8b0209', '_blank')" style="background:#222; color:var(--chzzk-green); border-color:var(--chzzk-green);">방송국 가기</button>
+                <button class="nav-btn" onclick="App.switchView('view-home')" style="background:var(--neon-red); color:#fff; border:none; padding:5px 15px;">CLOSE</button>
+            </div>
+        </div>
+        <div id="stream-wrapper">
+            <div id="stream-container"></div>
+        </div>
+    </main>
+
+    <main id="view-prizes" class="hidden">
+        <div class="prize-box gold">
+            <i class="fas fa-crown" style="color:var(--gold); font-size:3rem; margin-bottom:15px;"></i>
+            <h2 style="color:var(--gold)">CHAMPION</h2>
+            <p style="margin-top:10px; line-height:1.6;">아이패드 프로 M4<br><span style="font-size:1.5rem; font-weight:bold;">+ 상금 300만원</span></p>
+        </div>
+    </main>
+
+    <div class="modal" id="scoreModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:25px; font-family:'Black Ops One'; letter-spacing:2px;">MATCH RESULT</h3>
+            <div class="score-row" style="display:flex; justify-content:space-around; align-items:center; margin-bottom:30px;">
+                <div class="score-control" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <div id="m-p1-name" style="font-size:0.9rem;">P1</div>
+                    <button class="nav-btn" style="width:40px; height:40px;" onclick="App.modifyScore(1, 1)"><i class="fas fa-plus"></i></button>
+                    <input type="number" id="m-p1-score" class="score-input" value="0" readonly>
+                    <button class="nav-btn" style="width:40px; height:40px;" onclick="App.modifyScore(1, -1)"><i class="fas fa-minus"></i></button>
+                </div>
+                <div style="font-family:'Black Ops One'; font-size:1.5rem; color:#444;">VS</div>
+                <div class="score-control" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <div id="m-p2-name" style="font-size:0.9rem;">P2</div>
+                    <button class="nav-btn" style="width:40px; height:40px;" onclick="App.modifyScore(2, 1)"><i class="fas fa-plus"></i></button>
+                    <input type="number" id="m-p2-score" class="score-input" value="0" readonly>
+                    <button class="nav-btn" style="width:40px; height:40px;" onclick="App.modifyScore(2, -1)"><i class="fas fa-minus"></i></button>
+                </div>
+            </div>
+            <button class="nav-btn" style="width:100%; height:55px; background:var(--neon-red); color:#fff; border:none; margin-bottom:10px; font-weight:bold;" onclick="App.saveResult()">CONFIRM WINNER</button>
+            <button class="nav-btn" style="width:100%; border:none; background:transparent;" onclick="App.closeModal()">CANCEL</button>
         </div>
     </div>
 
-    <div class="sidebar">
-        <div class="eval-section">
-            <div class="status-msg" id="game-status">White to move</div>
-            <div class="eval-num" id="eval-val">0.0</div>
-            <div class="eval-bar"><div id="eval-fill"></div></div>
-            <div id="best-move" class="best-move">Engine Ready</div>
-        </div>
-        <div style="font-size: 0.75rem; color: #666;">MOVE HISTORY</div>
-        <div id="history" class="history"></div>
-        <div class="controls">
-            <button onclick="app.undo()">← UNDO</button>
-            <button class="primary" onclick="app.restart()">RESTART</button>
-        </div>
-    </div>
-</div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<script>
-const PIECE_IMAGES = {
-    wP: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
-    wR: 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
-    wN: 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
-    wB: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
-    wQ: 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
-    wK: 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
-    bP: 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
-    bR: 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
-    bN: 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg',
-    bB: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
-    bQ: 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
-    bK: 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb2O6V6BbMrbRXpMTlVPcPMyGxhDnJVUE",
+            authDomain: "ironfist2025.firebaseapp.com",
+            databaseURL: "https://ironfist2025-default-rtdb.firebaseio.com",
+            projectId: "ironfist2025",
+            storageBucket: "ironfist2025.firebasestorage.app",
+            messagingSenderId: "900662562002",
+            appId: "1:900662562002:web:34e08c0e8de63b1c1db10b",
+            measurementId: "G-KVCSX8N6P5"
+        };
 
-class ChessApp {
-    constructor() {
-        this.game = new Chess();
-        this.selectedSquare = null;
-        this.legalMoves = [];
-        this.pendingPromotion = null;
-        this.initEngine();
-        this.render();
-    }
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getDatabase(firebaseApp);
+        const auth = getAuth(firebaseApp);
 
-    // 🚀 수정된 엔진 로드 부분 (GitHub Pages 최적화)
-    initEngine() {
-        try {
-            // 보안 정책에 가장 유연한 구버전 엔진 주소를 사용합니다.
-            const engineUrl = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js';
-            this.sf = new Worker(engineUrl);
-            
-            this.sf.onmessage = (e) => this.handleEngine(e.data);
-            this.sf.postMessage('uci');
-            this.analyze();
-        } catch(e) { 
-            console.error("Engine failure.");
-            document.getElementById('best-move').innerText = "Engine Load Error";
-        }
-    }
+        window.App = {
+            dbKey: "TOURNAMENT_DATA_2025",
+            adminEmail: "ee1557003@gmail.com",
+            data: [],
+            curMatchId: null,
+            streamChannelID: "e8a6e6cc0882fce99e7edbb6ba8b0209",
 
-    render() {
-        const boardEl = document.getElementById('board');
-        boardEl.innerHTML = '';
-        const board = this.game.board();
+            async init() {
+                this.createEmbers();
+                
+                onAuthStateChanged(auth, (user) => {
+                    const authBtn = document.getElementById('auth-btn');
+                    // 관리자 이메일과 일치할 때만 로그아웃 표시
+                    if (user && user.email === this.adminEmail) {
+                        authBtn.innerText = "LOGOUT";
+                    } else {
+                        authBtn.innerText = "LOGIN";
+                    }
+                });
 
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
-                const sqName = String.fromCharCode(97 + c) + (8 - r);
-                const sq = document.createElement('div');
-                sq.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
-                if (this.selectedSquare === sqName) sq.classList.add('selected');
-                if (this.legalMoves.includes(sqName)) sq.classList.add('move-hint');
-                sq.onclick = () => this.onSquareClick(sqName);
+                const dataRef = ref(db, this.dbKey);
+                onValue(dataRef, (snapshot) => {
+                    const val = snapshot.val();
+                    if (val) {
+                        this.data = val;
+                        if (!document.getElementById('view-bracket').classList.contains('hidden')) {
+                            this.renderBracket();
+                        }
+                    } else {
+                        this.setupInitialData();
+                    }
+                });
+            },
 
-                const p = board[r][c];
-                if (p) {
-                    const pEl = document.createElement('div');
-                    pEl.className = 'piece';
-                    pEl.style.backgroundImage = `url(${PIECE_IMAGES[p.color + p.type.toUpperCase()]})`;
-                    sq.appendChild(pEl);
+            isAdmin() {
+                return auth.currentUser && auth.currentUser.email === this.adminEmail;
+            },
+
+            async toggleAuth() {
+                if (this.isAdmin()) {
+                    await signOut(auth);
+                    alert("관리자 로그아웃 완료");
+                } else {
+                    const email = prompt("관리자 이메일:");
+                    if (!email) return;
+                    const password = prompt("비밀번호:");
+                    if (!password) return;
+
+                    try {
+                        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                        if (userCredential.user.email === this.adminEmail) {
+                            alert("관리자 로그인 성공");
+                        } else {
+                            alert("인증되었습니다. 단, 관리자 권한이 없는 계정입니다.");
+                        }
+                    } catch (e) {
+                        alert("인증 실패: 정보를 다시 확인하세요.");
+                    }
                 }
-                boardEl.appendChild(sq);
+            },
+
+            setupInitialData() {
+                const players = ["KNEE","ARSLAN","ULSAN","CBM","LOWHIGH","JDCR","QUDANS","SAINT","BOOK","CHANEL","RANGCHU","JEONDDING","NOBI","CHIKURIN","GEN","KHAN","MULGOLD","AK","SHADOW","JOEY","ANAKIN","CUDDLE","SUPER","FERGUS","SEPHI","TETSU","GHIRLANDA","DANIEL","ABEL","PHIDX","DOUJIN","JOKA"];
+                this.data = [];
+                let mId = 0;
+                for (let r = 0; r < 5; r++) {
+                    let count = 32 / Math.pow(2, r + 1);
+                    for (let i = 0; i < count; i++) {
+                        this.data.push({
+                            id: mId++, round: r, index: i,
+                            p1: r === 0 ? players[i * 2] : "TBD",
+                            p2: r === 0 ? players[i * 2 + 1] : "TBD",
+                            s1: 0, s2: 0, winner: null
+                        });
+                    }
+                }
+                this.save();
+            },
+
+            save() { 
+                if (!this.isAdmin()) return;
+                set(ref(db, this.dbKey), this.data); 
+            },
+
+            switchView(id) {
+                document.querySelectorAll('main').forEach(m => m.classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                if (id === 'view-bracket') this.renderBracket();
+                if (id === 'view-stream') {
+                    document.getElementById('stream-container').innerHTML = 
+                        `<iframe src="https://chzzk.naver.com/live-embed/${this.streamChannelID}" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+                } else {
+                    document.getElementById('stream-container').innerHTML = "";
+                }
+            },
+
+            renderBracket() {
+                const draw = (colId, round, start, end, title) => {
+                    const col = document.getElementById(colId);
+                    if (!col) return;
+                    let html = `<div class="round-title">${title}</div>`;
+                    this.data.filter(m => m.round === round && m.index >= start && m.index < end).forEach(match => {
+                        const isTbd = match.p1 === "TBD" || match.p2 === "TBD";
+                        html += `
+                            <div class="match-card" onclick="App.openModal(${match.id})" style="${isTbd ? 'opacity:0.5; cursor:default;' : ''}">
+                                <div class="player-line ${match.winner === 1 ? 'winner' : ''}">
+                                    <span class="p-name">${match.p1}</span>
+                                    <span class="p-score">${match.winner ? match.s1 : ''}</span>
+                                </div>
+                                <div class="player-line ${match.winner === 2 ? 'winner' : ''}">
+                                    <span class="p-name">${match.p2}</span>
+                                    <span class="p-score">${match.winner ? match.s2 : ''}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    col.innerHTML = html;
+                };
+                draw('col-l1', 0, 0, 8, "ROUND OF 32");
+                draw('col-l2', 1, 0, 4, "ROUND OF 16");
+                draw('col-l3', 2, 0, 2, "QUARTER FINAL");
+                draw('col-l4', 3, 0, 1, "SEMI FINAL");
+                const final = this.data.find(m => m.round === 4);
+                const fCol = document.getElementById('col-final');
+                if (fCol && final) {
+                    fCol.innerHTML = `<div class="round-title" style="color:var(--neon-red); border-color:var(--neon-red); background:rgba(255,0,60,0.1);">GRAND FINAL</div>
+                        <div class="match-card" style="margin-top:50px; border-color:var(--neon-red); border-left-width:6px;" onclick="App.openModal(${final.id})">
+                            <div class="player-line ${final.winner === 1 ? 'winner' : ''}"><span class="p-name">${final.p1}</span><span>${final.winner ? final.s1 : ''}</span></div>
+                            <div class="player-line ${final.winner === 2 ? 'winner' : ''}"><span class="p-name">${final.p2}</span><span>${final.winner ? final.s2 : ''}</span></div>
+                        </div>`;
+                    if(final.winner) {
+                        const winName = final.winner === 1 ? final.p1 : final.p2;
+                        fCol.innerHTML += `<div style="text-align:center; margin-top:40px;"><i class="fas fa-crown" style="color:var(--gold); font-size:2.5rem;"></i><div style="font-family:'Black Ops One'; font-size:1.8rem; text-shadow:0 0 15px var(--gold); color:var(--gold);">${winName}</div></div>`;
+                    }
+                }
+                draw('col-r4', 3, 1, 2, "SEMI FINAL");
+                draw('col-r3', 2, 2, 4, "QUARTER FINAL");
+                draw('col-r2', 1, 4, 8, "ROUND OF 16");
+                draw('col-r1', 0, 8, 16, "ROUND OF 32");
+            },
+
+            openModal(id) {
+                if (!this.isAdmin()) { 
+                    alert("관리자 계정(`ee1557003@gmail.com`)으로만 수정 가능합니다."); 
+                    return; 
+                }
+                const m = this.data.find(x => x.id === id);
+                if (m.p1 === "TBD" || m.p2 === "TBD") return;
+                this.curMatchId = id;
+                document.getElementById('m-p1-name').innerText = m.p1;
+                document.getElementById('m-p2-name').innerText = m.p2;
+                document.getElementById('m-p1-score').value = m.s1;
+                document.getElementById('m-p2-score').value = m.s2;
+                document.getElementById('scoreModal').style.display = 'flex';
+            },
+
+            closeModal() { document.getElementById('scoreModal').style.display = 'none'; },
+
+            modifyScore(pNum, delta) {
+                const el = document.getElementById(`m-p${pNum}-score`);
+                let val = parseInt(el.value) + delta;
+                if (val < 0) val = 0;
+                el.value = val;
+            },
+
+            saveResult() {
+                if (!this.isAdmin()) return;
+                const s1 = parseInt(document.getElementById('m-p1-score').value);
+                const s2 = parseInt(document.getElementById('m-p2-score').value);
+                if (s1 === s2) return alert("무승부는 입력할 수 없습니다.");
+                const m = this.data.find(x => x.id === this.curMatchId);
+                const newWinner = s1 > s2 ? 1 : 2;
+                const winName = newWinner === 1 ? m.p1 : m.p2;
+                const isChanged = m.winner !== newWinner;
+                m.s1 = s1; m.s2 = s2; m.winner = newWinner;
+                const nextIdx = Math.floor(m.index / 2);
+                const nextMatch = this.data.find(x => x.round === m.round + 1 && x.index === nextIdx);
+                if (nextMatch) {
+                    if (m.index % 2 === 0) nextMatch.p1 = winName;
+                    else nextMatch.p2 = winName;
+                    if (isChanged) this.resetFutureMatches(nextMatch.id);
+                }
+                this.save(); this.closeModal(); this.renderBracket();
+            },
+
+            resetFutureMatches(matchId) {
+                const m = this.data.find(x => x.id === matchId);
+                if (!m) return;
+                m.winner = null; m.s1 = 0; m.s2 = 0;
+                const nextIdx = Math.floor(m.index / 2);
+                const nextMatch = this.data.find(x => x.round === m.round + 1 && x.index === nextIdx);
+                if (nextMatch) {
+                    if (m.index % 2 === 0) nextMatch.p1 = "TBD";
+                    else nextMatch.p2 = "TBD";
+                    this.resetFutureMatches(nextMatch.id);
+                }
+            },
+
+            createEmbers() {
+                const container = document.getElementById('ember-container');
+                for (let i = 0; i < 35; i++) {
+                    const ember = document.createElement('div');
+                    ember.className = 'ember';
+                    const size = Math.random() * 4 + 1;
+                    ember.style.width = `${size}px`; ember.style.height = `${size}px`;
+                    ember.style.left = `${Math.random() * 100}%`; ember.style.bottom = `-10px`;
+                    ember.style.setProperty('--duration', `${Math.random() * 5 + 3}s`);
+                    ember.style.setProperty('--drift', `${(Math.random() - 0.5) * 200}px`);
+                    ember.style.animationDelay = `${Math.random() * 5}s`;
+                    container.appendChild(ember);
+                }
+            },
+
+            resetData() { 
+                if (!this.isAdmin()) { alert("관리자 계정만 리셋할 수 있습니다."); return; }
+                if(confirm("모든 데이터가 초기화됩니다.")) { set(ref(db, this.dbKey), null); location.reload(); } 
             }
-        }
-    }
+        };
 
-    onSquareClick(square) {
-        if (this.pendingPromotion) return;
-        if (this.selectedSquare && this.legalMoves.includes(square)) {
-            const from = this.selectedSquare;
-            const piece = this.game.get(from);
-            const isPromotion = piece.type === 'p' && (square[1] === '8' || square[1] === '1');
-
-            if (isPromotion) {
-                this.pendingPromotion = { from, to: square };
-                this.showPromotionModal(piece.color);
-            } else {
-                this.game.move({ from, to: square });
-                this.onMoveComplete();
-            }
-            return;
-        }
-        const piece = this.game.get(square);
-        if (piece && piece.color === this.game.turn()) {
-            this.selectedSquare = square;
-            this.legalMoves = this.game.moves({ square: square, verbose: true }).map(m => m.to);
-        } else {
-            this.selectedSquare = null; this.legalMoves = [];
-        }
-        this.render();
-    }
-
-    showPromotionModal(color) {
-        const modal = document.getElementById('promotion-modal');
-        const choicesEl = document.getElementById('promo-choices');
-        choicesEl.innerHTML = '';
-        ['q', 'r', 'b', 'n'].forEach(type => {
-            const option = document.createElement('div');
-            option.className = 'promo-option';
-            option.style.backgroundImage = `url(${PIECE_IMAGES[color + type.toUpperCase()]})`;
-            option.onclick = () => this.finishPromotion(type);
-            choicesEl.appendChild(option);
-        });
-        modal.classList.remove('hidden');
-    }
-
-    finishPromotion(pieceType) {
-        this.game.move({ from: this.pendingPromotion.from, to: this.pendingPromotion.to, promotion: pieceType });
-        document.getElementById('promotion-modal').classList.add('hidden');
-        this.pendingPromotion = null;
-        this.onMoveComplete();
-    }
-
-    onMoveComplete() {
-        this.selectedSquare = null; this.legalMoves = [];
-        this.render();
-        this.updateUI();
-        this.analyze();
-    }
-
-    undo() { this.game.undo(); this.onMoveComplete(); }
-    restart() { if(confirm("Restart?")) { this.game.reset(); this.onMoveComplete(); } }
-
-    updateUI() {
-        const history = this.game.history();
-        document.getElementById('history').innerText = history.join(' ');
-        const status = document.getElementById('game-status');
-        if (this.game.in_checkmate()) status.innerText = "Checkmate!";
-        else status.innerText = (this.game.turn() === 'w' ? "White" : "Black") + " to move";
-    }
-
-    analyze() {
-        if (this.sf) {
-            this.sf.postMessage(`position fen ${this.game.fen()}`);
-            this.sf.postMessage('go depth 12');
-        }
-    }
-
-    handleEngine(msg) {
-        if (msg.includes('cp ')) {
-            let cp = parseInt(msg.match(/cp (-?\d+)/)[1]) / 100;
-            if (this.game.turn() === 'b') cp = -cp;
-            document.getElementById('eval-val').innerText = (cp > 0 ? "+" : "") + cp.toFixed(1);
-            document.getElementById('eval-fill').style.width = Math.max(0, Math.min(100, 50 + cp * 10)) + "%";
-        } else if (msg.startsWith('bestmove')) {
-            document.getElementById('best-move').innerText = "Best: " + msg.split(' ')[1];
-        }
-    }
-}
-const app = new ChessApp();
-</script>
+        App.init();
+    </script>
 </body>
 </html>
